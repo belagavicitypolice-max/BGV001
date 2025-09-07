@@ -1,43 +1,982 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telecom Data Analysis Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --info: #17a2b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: var(--primary);
+            color: white;
+            padding: 20px 0;
+            transition: all 0.3s;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        .logo h2 {
+            font-size: 22px;
+            margin-top: 10px;
+        }
+        
+        .menu {
+            margin-top: 30px;
+        }
+        
+        .menu-item {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .menu-item i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .header h1 {
+            color: var(--dark);
+            font-size: 28px;
+        }
+        
+        .search-box {
+            display: flex;
+            width: 400px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 16px;
+        }
+        
+        .search-box button {
+            padding: 10px 20px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        /* Card Styles */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            color: var(--dark);
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+        }
+        
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--secondary);
+            margin: 10px 0;
+        }
+        
+        .card-text {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            font-size: 20px;
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
+        
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table th {
+            background-color: var(--light);
+            color: var(--dark);
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .tab.active {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        /* File Upload */
+        .upload-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--secondary);
+            background: rgba(52, 152, 219, 0.05);
+        }
+        
+        .file-upload i {
+            font-size: 48px;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+        
+        .file-upload-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .file-upload-subtext {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        /* Analysis Sections */
+        .analysis-section {
+            display: none;
+        }
+        
+        .analysis-section.active {
+            display: block;
+        }
+        
+        /* Excel-like Dashboard */
+        .excel-dashboard {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: auto;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard-title {
+            font-size: 20px;
+            color: var(--dark);
+        }
+        
+        .dashboard-filters {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .dashboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .dashboard-table th {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        .dashboard-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .dashboard-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .dashboard-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .cards {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-box {
+                width: 100%;
+                margin-top: 15px;
+            }
+            
+            .cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .dashboard-filters {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-satellite-dish fa-3x"></i>
+                <h2>Telecom Analysis</h2>
+            </div>
+            
+            <div class="menu">
+                <div class="menu-item active" data-target="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="menu-item" data-target="frequency">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Frequency Details</span>
+                </div>
+                <div class="menu-item" data-target="number-analysis">
+                    <i class="fas fa-search-plus"></i>
+                    <span>Number Analysis</span>
+                </div>
+                <div class="menu-item" data-target="matrix">
+                    <i class="fas fa-table"></i>
+                    <span>Matrix Report</span>
+                </div>
+                <div class="menu-item" data-target="common-numbers">
+                    <i class="fas fa-users"></i>
+                    <span>Common Numbers</span>
+                </div>
+                <div class="menu-item" data-target="common-imei">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Common IMEI</span>
+                </div>
+                <div class="menu-item" data-target="common-towers">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Common Towers</span>
+                </div>
+                <div class="menu-item" data-target="pattern">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Pattern Analysis</span>
+                </div>
+                <div class="menu-item" data-target="movements">
+                    <i class="fas fa-route"></i>
+                    <span>Movements</span>
+                </div>
+                <div class="menu-item" data-target="behavior">
+                    <i class="fas fa-brain"></i>
+                    <span>Behavior Analysis</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>CDR/TDR Analysis Dashboard</h1>
+                <div class="search-box">
+                    <input type="text" placeholder="Search number, IMEI, or tower...">
+                    <button><i class="fas fa-search"></i> Search</button>
+                </div>
+            </div>
+            
+            <!-- File Upload Section -->
+            <div class="upload-container">
+                <h2>Upload CDR/TDR Data</h2>
+                <p>Upload Excel files to analyze telecom data</p>
+                
+                <div class="file-upload" id="fileUpload">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div class="file-upload-text">Drag & Drop your Excel file here</div>
+                    <div class="file-upload-subtext">OR</div>
+                    <input type="file" id="fileInput" accept=".xlsx, .xls" style="display: none;">
+                    <button class="btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-file-excel"></i> Browse Files
+                    </button>
+                </div>
+                
+                <div id="fileInfo" style="display: none;">
+                    <p><strong>File uploaded:</strong> <span id="fileName"></span></p>
+                    <p><strong>File size:</strong> <span id="fileSize"></span></p>
+                    <button class="btn" id="analyzeBtn" style="margin-top: 15px;">
+                        <i class="fas fa-chart-line"></i> Analyze Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="analysis-section active">
+                <!-- Stats Cards -->
+                <div class="cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Total Records</div>
+                            <div class="card-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="totalRecords">0</div>
+                        <div class="card-text">From uploaded file</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Unique Numbers</div>
+                            <div class="card-icon">
+                                <i class="fas fa-sim-card"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="uniqueNumbers">0</div>
+                        <div class="card-text">From uploaded file</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Cell Sites</div>
+                            <div class="card-icon">
+                                <i class="fas fa-broadcast-tower"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="cellSites">0</div>
+                        <div class="card-text">From uploaded file</div>
+                    </div>
+                </div>
+                
+                <!-- Excel-like Dashboard -->
+                <div class="excel-dashboard">
+                    <div class="dashboard-header">
+                        <div class="dashboard-title">Communication Overview</div>
+                        <div class="dashboard-filters">
+                            <select class="form-control" style="width: 200px;">
+                                <option>All Numbers</option>
+                                <option>Top Callers</option>
+                                <option>Top Receivers</option>
+                            </select>
+                            <input type="text" class="form-control" placeholder="Search...">
+                            <button class="btn"><i class="fas fa-filter"></i> Filter</button>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Number A</th>
+                                    <th>Number B</th>
+                                    <th>IMEI</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Duration</th>
+                                    <th>Cell Site</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center;">Upload a file to see data</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="chart-container">
+                    <div class="chart-title">Call Frequency Pattern</div>
+                    <canvas id="frequencyChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Common Numbers Section -->
+            <div id="common-numbers" class="analysis-section">
+                <div class="chart-container">
+                    <div class="chart-title">Common Numbers Analysis</div>
+                    <p>Analysis of the most frequently communicating numbers.</p>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-tab="common-callers">Top Callers</div>
+                        <div class="tab" data-tab="common-receivers">Top Receivers</div>
+                        <div class="tab" data-tab="common-pairs">Communication Pairs</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="commonNumbersChart"></canvas>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Phone Number</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Last Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commonNumbersBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Upload a file to see data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Common IMEI Section -->
+            <div id="common-imei" class="analysis-section">
+                <div class="chart-container">
+                    <div class="chart-title">Common IMEI Analysis</div>
+                    <p>Analysis of devices (IMEI) most frequently used for communication.</p>
+                    
+                    <div class="chart-container">
+                        <canvas id="commonImeiChart"></canvas>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>IMEI Number</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Associated Numbers</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commonImeiBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Upload a file to see data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Common Towers Section -->
+            <div id="common-towers" class="analysis-section">
+                <div class="chart-container">
+                    <div class="chart-title">Common Cell Towers Analysis</div>
+                    <p>Analysis of the most frequently used cell towers.</p>
+                    
+                    <div class="chart-container">
+                        <canvas id="commonTowersChart"></canvas>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Cell Site ID</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Location</th>
+                                <th>Top Users</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commonTowersBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Upload a file to see data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pattern Analysis Section -->
+            <div id="pattern" class="analysis-section">
+                <div class="chart-container">
+                    <div class="chart-title">Pattern Analysis</div>
+                    <p>Analysis of communication patterns and behaviors.</p>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-tab="time-pattern">Time Patterns</div>
+                        <div class="tab" data-tab="day-pattern">Day Patterns</div>
+                        <div class="tab" data-tab="duration-pattern">Duration Patterns</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="patternChart"></canvas>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="patternNumber">Enter Phone Number for Pattern Analysis</label>
+                        <input type="text" id="patternNumber" class="form-control" placeholder="e.g., +1234567890">
+                    </div>
+                    <button class="btn btn-block">Analyze Patterns</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    <script>
+        // Initialize charts and data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Frequency Chart
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            const frequencyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'Call Frequency',
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Common Numbers Chart
+            const commonNumbersCtx = document.getElementById('commonNumbersChart').getContext('2d');
+            const commonNumbersChart = new Chart(commonNumbersCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Communication Count',
+                        data: [],
+                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Menu item functionality
+            const menuItems = document.querySelectorAll('.menu-item');
+            const analysisSections = document.querySelectorAll('.analysis-section');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const target = item.getAttribute('data-target');
+                    
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    analysisSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === target) {
+                            section.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabGroup = tab.closest('.tabs');
+                    tabGroup.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                });
+            });
+            
+            // File upload functionality
+            const fileInput = document.getElementById('fileInput');
+            const fileUpload = document.getElementById('fileUpload');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            fileInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    fileName.textContent = file.name;
+                    fileSize.textContent = formatFileSize(file.size);
+                    fileInfo.style.display = 'block';
+                    
+                    // Read the Excel file
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        
+                        // Process the workbook
+                        processWorkbook(workbook);
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+            
+            // Drag and drop functionality
+            fileUpload.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#3498db';
+                this.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+            });
+            
+            fileUpload.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'transparent';
+            });
+            
+            fileUpload.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'transparent';
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+            
+            analyzeBtn.addEventListener('click', function() {
+                alert('Data analysis started! This would process the uploaded Excel file in a real application.');
+                // In a real application, this would process the data and update all visualizations
+            });
+            
+            // Helper function to format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Function to process the Excel workbook
+            function processWorkbook(workbook) {
+                // Get the first worksheet
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Convert to JSON
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                
+                // Process the data and update the UI
+                if (jsonData.length > 0) {
+                    // Remove header row if exists
+                    const headers = jsonData[0];
+                    const dataRows = jsonData.slice(1);
+                    
+                    // Update stats
+                    document.getElementById('totalRecords').textContent = dataRows.length;
+                    
+                    // Extract unique numbers
+                    const numbersA = dataRows.map(row => row[0]).filter((value, index, self) => self.indexOf(value) === index);
+                    const numbersB = dataRows.map(row => row[1]).filter((value, index, self) => self.indexOf(value) === index);
+                    const uniqueNumbers = [...new Set([...numbersA, ...numbersB])];
+                    document.getElementById('uniqueNumbers').textContent = uniqueNumbers.length;
+                    
+                    // Extract unique cell sites
+                    const cellSites = dataRows.map(row => row[5]).filter((value, index, self) => self.indexOf(value) === index);
+                    document.getElementById('cellSites').textContent = cellSites.length;
+                    
+                    // Update data table
+                    const tableBody = document.getElementById('dataTableBody');
+                    tableBody.innerHTML = '';
+                    
+                    // Show first 10 rows
+                    const displayRows = dataRows.slice(0, 10);
+                    displayRows.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row[0] || ''}</td>
+                            <td>${row[1] || ''}</td>
+                            <td>${row[2] || ''}</td>
+                            <td>${formatDate(row[3])}</td>
+                            <td>${formatTime(row[4])}</td>
+                            <td>${row[5] || ''}s</td>
+                            <td>${row[6] || ''}</td>
+                            <td>${getLocationFromCellSite(row[6])}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                    
+                    // Update charts with sample data
+                    frequencyChart.data.datasets[0].data = [12, 19, 3, 5, 2, 15];
+                    frequencyChart.update();
+                    
+                    // Update common numbers chart
+                    commonNumbersChart.data.labels = ['+1234567890', '+1987654320', '+1555098765', '+1443366789', '+1122334455'];
+                    commonNumbersChart.data.datasets[0].data = [42, 35, 28, 24, 19];
+                    commonNumbersChart.update();
+                    
+                    // Update common numbers table
+                    const commonNumbersBody = document.getElementById('commonNumbersBody');
+                    commonNumbersBody.innerHTML = '';
+                    const topNumbers = [
+                        {number: '+1234567890', count: 42, percent: '18%', lastActive: '2023-10-15 18:22:55'},
+                        {number: '+1987654320', count: 35, percent: '15%', lastActive: '2023-10-15 17:43:08'},
+                        {number: '+1555098765', count: 28, percent: '12%', lastActive: '2023-10-15 16:05:12'},
+                        {number: '+1443366789', count: 24, percent: '10%', lastActive: '2023-10-15 15:18:47'},
+                        {number: '+1122334455', count: 19, percent: '8%', lastActive: '2023-10-15 14:32:21'}
+                    ];
+                    
+                    topNumbers.forEach((num, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${num.number}</td>
+                            <td>${num.count}</td>
+                            <td>${num.percent}</td>
+                            <td>${num.lastActive}</td>
+                        `;
+                        commonNumbersBody.appendChild(tr);
+                    });
+                    
+                    alert(`Successfully loaded Excel file with ${dataRows.length} rows of data. Displaying first 10 rows.`);
+                }
+            }
+            
+            // Helper function to format date
+            function formatDate(dateValue) {
+                if (!dateValue) return '';
+                if (typeof dateValue === 'string') return dateValue;
+                
+                // If it's an Excel serial date
+                if (typeof dateValue === 'number') {
+                    const date = new Date((dateValue - 25569) * 86400 * 1000);
+                    return date.toISOString().split('T')[0];
+                }
+                
+                return dateValue;
+            }
+            
+            // Helper function to format time
+            function formatTime(timeValue) {
+                if (!timeValue) return '';
+                if (typeof timeValue === 'string') return timeValue;
+                
+                // If it's an Excel serial time
+                if (typeof timeValue === 'number') {
+                    const totalSeconds = Math.floor(timeValue * 86400);
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
+                    
+                    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                return timeValue;
+            }
+            
+            // Helper function to get location from cell site
+            function getLocationFromCellSite(cellSite) {
+                if (!cellSite) return 'Unknown';
+                
+                // Simple mapping for demonstration
+                const locationMap = {
+                    'Site-42B': 'Downtown',
+                    'Site-18C': 'North District',
+                    'Site-29A': 'South District',
+                    'Site-37D': 'East District',
+                    'Site-51E': 'West District'
+                };
+                
+                return locationMap[cellSite] || 'Unknown Location';
+            }
+        });
+    </script>
+</body>
+</html>
